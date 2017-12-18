@@ -691,4 +691,23 @@ NSArray *MGLSubexpressionsWithJSONObjects(NSArray *objects) {
     return self;
 }
 
+- (NSExpression *)mgl_expressionByApplyingSubstitutions:(NSDictionary<NSString *, NSString *> *)substitutions {
+    id jsonObject = self.mgl_jsonExpressionObject;
+    NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] init];
+    [archiver encodeObject:jsonObject forKey:NSKeyedArchiveRootObjectKey];
+    [archiver finishEncoding];
+    jsonObject = [NSKeyedUnarchiver unarchiveObjectWithData:archiver.encodedData];
+    NSExpression *expressionUsingVariables = [NSExpression mgl_expressionWithJSONObject:jsonObject];
+    NSMutableDictionary *safeSubstitutions = [NSMutableDictionary dictionaryWithCapacity:substitutions.count];
+    [substitutions enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull target, NSString * _Nonnull replacement, BOOL * _Nonnull stop) {
+        NSString *variable = [NSString stringWithFormat:@"__com_mapbox_mapbox_streets__%@",
+                              [target stringByReplacingOccurrencesOfString:@"-" withString:@"_"]];
+        NSString *keyPath = replacement;
+        safeSubstitutions[variable] = [NSExpression expressionForKeyPath:keyPath];
+    }];
+    return [NSExpression expressionForFunction:expressionUsingVariables
+                                  selectorName:@"mgl_expressionWithContext:"
+                                     arguments:@[safeSubstitutions]];
+}
+
 @end

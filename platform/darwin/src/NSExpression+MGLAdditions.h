@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) id mgl_jsonExpressionObject;
 
 - (NSExpression *)mgl_expressionWithContext:(NSDictionary<NSString *, NSExpression *> *)context;
+- (NSExpression *)mgl_expressionByApplyingSubstitutions:(NSDictionary<NSString *, NSString *> *)substitutions;
 
 @end
 
